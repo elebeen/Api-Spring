@@ -26,29 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class SensorDataController {
 
     @Autowired
-    private SensorDataRepository repository;
-    @Autowired
     private FlowRawRepository flowRawRepository;
     @Autowired
     private FlowDayRepository flowDayRepository;
-
-    // GET: Obtener los últimos 10 registros por orden de llegada
-    @GetMapping("/ultimos")
-    public List<Double> obtenerUltimosFlujos() {
-        return repository.findTop10ByOrderByTimestampDesc()
-                .stream()
-                .map(SensorData::getCaudal)
-                .collect(Collectors.toList());
-    }
-
-    // GET: Obtener los 10 caudales más altos con su timestamp
-    @GetMapping("/top10")
-    public List<CaudalHoraDTO> obtenerTop10Caudales() {
-        return repository.findTop10ByOrderByCaudalDesc()
-                .stream()
-                .map(d -> new CaudalHoraDTO(d.getCaudal(), d.getTimestamp()))
-                .collect(Collectors.toList());  
-    }
 
     @GetMapping("/last/hour")
     public List<FlowRaw> LastHour() {
