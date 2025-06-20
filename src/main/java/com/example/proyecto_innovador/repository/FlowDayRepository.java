@@ -1,12 +1,14 @@
 package com.example.proyecto_innovador.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.example.proyecto_innovador.model.FlowDay;
 
 public interface FlowDayRepository extends JpaRepository<FlowDay, Long> {
-    // Aquí puedes agregar métodos personalizados si es necesario
-    // Por ejemplo, para obtener datos por fecha o caudal específico
-    // List<FlowDay> findByDate(Date date);
-    // List<FlowDay> findByFlowrateGreaterThan(Double flowrate);
-    
+    Optional<FlowDay> findTopByOrderByDateDesc();
+    Optional<FlowDay> findByDate(LocalDateTime date);
+    List<FlowDay> findByDateAfterOrderByDateAsc(LocalDateTime date);
 }
