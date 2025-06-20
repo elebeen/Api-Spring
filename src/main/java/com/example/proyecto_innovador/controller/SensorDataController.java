@@ -1,18 +1,17 @@
 package com.example.proyecto_innovador.controller;
 
+import com.example.proyecto_innovador.dto.HourlyFlowSummaryDto;
 import com.example.proyecto_innovador.model.FlowDay;
 import com.example.proyecto_innovador.model.FlowRaw;
-import com.example.proyecto_innovador.model.SensorData;
 import com.example.proyecto_innovador.repository.FlowDayRepository;
 import com.example.proyecto_innovador.repository.FlowRawRepository;
-import com.example.proyecto_innovador.repository.SensorDataRepository;
-import com.example.proyecto_innovador.dto.CaudalHoraDTO;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -29,42 +28,53 @@ public class SensorDataController {
     private FlowRawRepository flowRawRepository;
     @Autowired
     private FlowDayRepository flowDayRepository;
-
+    // Devuelve una lista de FlowRaw que contiene los datos de flujo en bruto
     @GetMapping("/last/hour")
     public List<FlowRaw> LastHour() {
         LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
         List<FlowRaw> lastHourData = flowRawRepository.findByTimestampAfterOrderByTimestampAsc(oneHourAgo);
+
+        if (lastHourData.isEmpty()) {
+            return null; // Si no hay registros, retorna null
+        }
         return lastHourData;
+         // Calcula la hora de inicio (hace 1 hora), asegurando que sea en UTC
+        // Instant oneHourAgoInstant = Instant.now().minusSeconds(3600);
+        // LocalDateTime oneHourAgo = LocalDateTime.ofInstant(oneHourAgoInstant, ZoneId.of("UTC")); 
+
+        // // Llama al nuevo método del repositorio para obtener los datos agregados
+        // List<HourlyFlowSummaryDto> hourlySummary = flowRawRepository.findHourlyFlowSummary(oneHourAgo);
+
+        // Si necesitas asegurar exactamente 60 elementos, puedes "rellenar" los minutos faltantes
+        // con 0 en Java si la consulta no devuelve datos para todos los minutos.
+        // Pero la consulta normalmente devuelve solo los minutos con datos.
+
+        // return hourlySummary;
     }
 
+    // Devuelve solo un dato que representa la suma de todos los datos de flujo del día actual
     @GetMapping("/today/total")
-    public FlowDay getTodayFlowDay() {
+    public Optional<FlowDay> getTodayFlowDay() {
         Optional<FlowDay> today = flowDayRepository.findTopByOrderByDateDesc();
-        return today.orElse(null);
+        if (today.isEmpty()) {
+            return Optional.empty();
+        }
+        return today;
     }
 
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * Retrieves a list of FlowDay records for the current day.
- *
- * This method queries the FlowDayRepository to get all flow day records 
- * that have a date after the previous day. It effectively filters and 
- * returns records for the current day. The method is exposed as a GET 
- * endpoint at "/api/sensores/today".
- *
- * @return a list of FlowDay instances representing the flow data for the 
- *         current day, or null if no records are found.
- */
-
-/*******  18e6ccf2-db85-4b8f-be80-a23f59ff3275 *******/
+    // Devuelve una lista de FlowRaw que contiene los datos de flujo del día actual
     @GetMapping("/today")
     public List<FlowRaw> getTodayFlow() {
         LocalDateTime today = LocalDateTime.now().minusDays(1); // Obtiene la fecha actual del servidor de la API
         List<FlowRaw> flowDays = flowRawRepository.findByTimestampAfterOrderByTimestampAsc(today);
         // Filtra los registros para obtener solo el del día actual
+        if (flowDays.isEmpty()) {
+            return null; // Si no hay registros, retorna null
+        }
         return flowDays;
     }
 
+    // Devuelve una lista de FlowDay que contiene los datos de flujo del mes actual en dias
     @GetMapping("/last/30")
     public List<FlowDay> getLastMonthDailyFlow() {
         // Calcula el primer día del mes actual
@@ -79,7 +89,9 @@ public class SensorDataController {
         // Alternativamente, si quieres EXACTAMENTE el mes anterior (ej. del 1 de Mayo al 31 de Mayo),
         // usarías findByDateBetween(firstDayOfLastMonth, firstDayOfCurrentMonth.minusDays(1))
         // y necesitarías un método findByDateBetween en tu repositorio.
-
+        if (lastMonthData.isEmpty()) {
+            return null; // Si no hay registros, retorna null
+        }
         return lastMonthData;
     }
 }
